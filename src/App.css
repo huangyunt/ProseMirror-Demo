@@ -36,3 +36,14 @@
     transform: rotate(360deg);
   }
 }
+
+/* style.css 稍微对编辑器增加点样式 */
+#editorContainer {
+  border: 1px solid #646cffaa;
+  padding: 0px 12px;
+}
+
+#editorContainer .ProseMirror {
+  outline: none;
+  caret-color: #646cffaa;
+}
