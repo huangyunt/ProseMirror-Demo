@@ -13,6 +13,7 @@
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "crelt": "^1.0.6",
+    "highlight.js": "^11.11.1",
     "prosemirror-commands": "^1.7.1",
     "prosemirror-example-setup": "^1.2.3",
     "prosemirror-history": "^1.5.0",

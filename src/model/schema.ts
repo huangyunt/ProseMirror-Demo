@@ -6,7 +6,7 @@ export const schema = new Schema({
       content: 'tile+'
     },
     block_tile: {
-      content: 'block+',
+      content: 'block',
       group: 'tile',
       inline: false,
       toDOM: () => {
