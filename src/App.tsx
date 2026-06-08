@@ -1,14 +1,15 @@
 import React, { useEffect } from "react";
 import logo from "./logo.svg";
 import "./App.css";
+import "highlight.js/styles/atom-one-dark.css";
 
 // view.ts
-import { Decoration, DecorationSet, EditorView } from "prosemirror-view";
+import { EditorView } from "prosemirror-view";
 import { EditorState, PluginKey, Plugin } from "prosemirror-state";
 // 新增以下导入
 import { keymap } from "prosemirror-keymap";
 // baseKeymap 定义了对于很多基础按键按下后的功能，例如回车换行，删除键等。
-import { baseKeymap } from "prosemirror-commands";
+import { baseKeymap, chainCommands } from "prosemirror-commands";
 // history 是操作历史，提供了对保存操作历史以及恢复等功能，undo，redo 函数对应为进行 undo 操作与 redo 操作，恢复历史数据
 import { history, undo, redo } from "prosemirror-history";
 import { exampleSetup } from "prosemirror-example-setup";
@@ -30,9 +31,16 @@ import {
 import { Toolbar } from "./module/toolBar";
 import { Attrs, MarkType, Schema } from "prosemirror-model";
 import { TextSelection } from "prosemirror-state";
-import { insertParagraphCommand, toggleBoldCmd } from "./utils/command";
+import {
+  insertCodeBlockCmd,
+  insertParagraphCommand,
+  selectAllCodeCmd,
+  toggleBoldCmd,
+} from "./utils/command";
 import { isBold, toggleBold } from "./utils/mark";
 import { docChangedTimesPlugin } from "./utils/plugin";
+import { codeBlockViewConstructor } from "./nodeView/CodeBlockView";
+import { codeHighlightPlugin } from "./utils/utils";
 
 // // 加入到 state 中
 // const editorState = EditorState.create({
@@ -87,7 +95,11 @@ export const setupEditor = (el: HTMLElement | null) => {
   const editorState = EditorState.create({
     schema,
     plugins: [
-      keymap({ ...baseKeymap, Enter: insertParagraphCommand }),
+      keymap({
+        ...baseKeymap,
+        Enter: insertParagraphCommand,
+        "Mod-a": chainCommands(selectAllCodeCmd, baseKeymap["Mod-a"]),
+      }),
       // 接入 history 插件，提供输入历史栈功能
       history(),
       // 将组合按键 ctrl/cmd + z, ctrl/cmd + y 分别绑定到 undo, redo 功能上
@@ -105,6 +117,7 @@ export const setupEditor = (el: HTMLElement | null) => {
       }),
 
       docChangedTimesPlugin(),
+      codeHighlightPlugin(),
     ],
     doc,
   });
@@ -112,21 +125,14 @@ export const setupEditor = (el: HTMLElement | null) => {
   // 创建编辑器视图实例，并挂在到 el 上
   const editorView = new EditorView(editorRoot, {
     state: editorState,
+    nodeViews: {
+      code_block: codeBlockViewConstructor,
+    },
     //
     dispatchTransaction(tr) {
       console.log("tr", tr);
       let newState = editorView.state.apply(tr);
       editorView.updateState(newState);
-    },
-
-    // nodeViews: {
-    //   code_block: codeBlockViewConstructor,
-    // },
-    // editor View 中增加一个 decorations，通过  Decoration.inline 指定在位置 从 5 -> 10 的文本上，添加 style 样式，为红色
-    decorations(state) {
-      const decoration = Decoration.inline(5, 10, { style: "color: red" });
-      // 返回的 decoration 必须是个 DecorationSet
-      return DecorationSet.create(state.doc, [decoration]);
     },
   });
 
@@ -158,6 +164,16 @@ export const setupEditor = (el: HTMLElement | null) => {
             label: "添加 datetime",
             handler: (props) => {
               insertDatetime(props.view, Date.now());
+            },
+          },
+          // 然后增加一个按钮，调用命令。
+          {
+            label: "添加代码块",
+            handler: ({ state, dispatch, view }) => {
+              insertCodeBlockCmd(state, dispatch, view);
+              setTimeout(() => {
+                view.focus();
+              });
             },
           },
         ],

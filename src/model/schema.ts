@@ -1,5 +1,6 @@
 // model.ts 文件命名暂时还是以 mvc 模式命名，方便理解，实际中 命名为 schema.ts 更好
 import { Schema } from 'prosemirror-model';
+import { codeBlock } from './codeBlockSchema';
 export const schema = new Schema({
   nodes: {
     doc: {
@@ -117,6 +118,7 @@ export const schema = new Schema({
         }
       ]
     },
+    code_block: codeBlock,
   },
   marks: {
     // 常见的 mark
